@@ -12,17 +12,18 @@
 
 #include <windows.h>
 
-class PassReader
+class PassReader : public QObject
 {
+    Q_OBJECT
 public:
-    PassReader();
-    PassReader(QString& str);
+    explicit PassReader(QObject* parent = 0);
+    PassReader(QObject* parent, QString& str);
     ~PassReader();
 
     bool readPass();
 
 signals:
-    void fileSaved();
+    void fileSaved(QString filePath);
 
 private:
     QString* path;
