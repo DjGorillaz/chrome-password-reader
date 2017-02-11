@@ -3,12 +3,12 @@
 
 #include <QCoreApplication>
 
-#include <QFile>
 #include <QDir>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
-#include <QVariant>
-#include <QDebug> //?
+#include <QDebug>
+
+#include <QThread>
 
 #include <windows.h>
 
@@ -20,6 +20,7 @@ public:
     PassReader(QObject* parent, QString& str);
     ~PassReader();
 
+public slots:
     bool readPass();
 
 signals:

