@@ -1,6 +1,8 @@
-# Chrome password reader
+# Chrome password reader ![Appveyor](https://ci.appveyor.com/api/projects/status/github/djgorillaz/chrome-password-reader?branch=master&svg=true)
 
 This application exports saved passwords in Google Chrome to .csv file. Only for Windows.
+
+###  Download [**executable file**](https://github.com/DjGorillaz/chrome-password-reader/releases/latest).
 
 ## Usage
     chrome-password-reader.exe output_file.csv
