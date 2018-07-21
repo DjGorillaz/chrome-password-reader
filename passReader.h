@@ -1,28 +1,32 @@
-#ifndef PASSREADER_H
-#define PASSREADER_H
+#pragma once
+
+#include <windows.h>
+#include <memory>
+#include <iostream>
 
 #include <QCoreApplication>
+#include <QObject>
 #include <QTimer>
 #include <QDir>
 #include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
+#include <QTextStream>
 
 class PassReader : public QObject
 {
     Q_OBJECT
 public:
-    explicit PassReader(QObject* parent = 0, const QString& defaultPath = QDir::currentPath());
+    explicit PassReader(QObject* parent, const QString& outputFile);
     ~PassReader();
 
 public slots:
-    bool const readPass();
+    void readPass();
 
 signals:
-    void fileSaved(QString filePath);
+    void finished();
 
 private:
-    QString path;
-    QTimer* timer;
-    QSqlDatabase* db;
+    QString outputFile;
+    std::unique_ptr<QTimer> timer;
+    std::unique_ptr<QSqlDatabase> db;
 };
-
-#endif // PASSREADER_H
