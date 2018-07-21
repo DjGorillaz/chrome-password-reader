@@ -34,7 +34,7 @@ void PassReader::readPass()
         //If data base is locked
         if ( ! query.exec())
         {
-            std::cerr << "Database is locked\n";
+            std::cerr << "Database is locked. Please close Google Chrome.\n";
             db->close();
             //Start timer
             if ( ! timer->isActive())
