@@ -2,17 +2,15 @@ QT += core
 QT -= gui
 QT += sql
 
-CONFIG += c++11
-
-TARGET = chromePassReader
+TARGET = chrome-password-reader
 CONFIG += console
 CONFIG -= app_bundle
 
 TEMPLATE = app
 
 SOURCES += \
-    passReader.cpp \
-    PassReaderExample.cpp
+    main.cpp \
+    passReader.cpp
 
 HEADERS += \
     passReader.h
