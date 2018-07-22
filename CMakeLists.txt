@@ -10,8 +10,6 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-set(CMAKE_PREFIX_PATH "C:\\Qt\\5.11.1\\msvc2017_64\\")
-
 # Find the Qt libraries
 find_package(Qt5Core CONFIG REQUIRED)
 find_package(Qt5Sql CONFIG REQUIRED)
