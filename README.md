@@ -16,7 +16,7 @@ Program connects to a DB using DPAPI functions, accesses encrypted fields and wr
 ### DPAPI
 Data Protection API provides data protection by encrypting files. DPAPI encrypts files using a new password for each user, so they cannot be decrypted by another user's account. Besides that, secret key (entropy) can be used to restrict access even within one account. If entropy is not set, any program in user space can decrypt database and get original data.
 
-It is simple to use DPAPI, because only two functions are used for encryption and decryption: CryptProtectData and CryptUnprotectData. CryptProtectData takes a pointer to structure DATA_BLOB which contains encrypted data and also the other undocumented information for decryption. If necessary, you can set entropy. Function CryptUnprotectData woks similarly. It gets encrypted object and return decrypted data to application.
+It is simple to use DPAPI, because only two functions are used for encryption and decryption: CryptProtectData and CryptUnprotectData. CryptProtectData takes a pointer to structure DATA_BLOB which contains encrypted data and also the other undocumented information for decryption. If necessary, you can set entropy. Function CryptUnprotectData works similarly. It gets encrypted object and return decrypted data to application.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](https://github.com/DjGorillaz/chrome-password-reader/blob/master/LICENSE) file for details
